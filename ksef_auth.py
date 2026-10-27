@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import datetime, timedelta, timezone
 import requests
 from dotenv import load_dotenv
 
@@ -93,6 +94,24 @@ def authenticate(base_url: str, nip: str, ksef_token: str, timeout: int = 10) ->
 
     return tokens
 
+# Add check for expired token to keep the session until token is about to expire
+
+_cache = {}   # holds the latest tokens between calls
+
+def _access() -> str:
+    tokens = _cache.get("tokens")
+
+    if tokens is not None:
+        valid_until = datetime.fromisoformat(
+            tokens["accessToken"]["validUntil"].replace("Z", "+00:00")
+        )
+        if valid_until - datetime.now(timezone.utc) > timedelta(seconds=60):                                  
+            return tokens["accessToken"]["token"]  
+
+    _cache["tokens"] = authenticate(BASE_URL, NIP, KSEF_TOKEN)
+    return _cache["tokens"]["accessToken"]["token"]
+
 if __name__ == "__main__":
-    tokens = authenticate(BASE_URL, NIP, KSEF_TOKEN)
-    print("Auth OK, valid until:", tokens["accessToken"]["validUntil"])
+    first = _access()
+    second = _access()
+    print("Same token reused:", first == second)
