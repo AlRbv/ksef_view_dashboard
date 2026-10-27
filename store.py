@@ -1,6 +1,8 @@
 import sqlite3
 import pandas as pd
 
+from datetime import datetime
+
 DB_PATH = "data/ksef.db"
 
 SCHEMA = """
@@ -21,11 +23,16 @@ CREATE TABLE IF NOT EXISTS invoices (
     invoice_type    TEXT,
     PRIMARY KEY (ksef_number, direction)
 );
+
+CREATE TABLE IF NOT EXISTS sync_state (
+    direction    TEXT PRIMARY KEY,
+    last_synced  TEXT NOT NULL
+);
 """
 
 def connect() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH)
-    conn.execute(SCHEMA)
+    conn.executescript(SCHEMA)
     return conn
 
 def to_row(inv: dict, direction: str) -> dict:
@@ -83,3 +90,19 @@ def dataframe(conn: sqlite3.Connection) -> pd.DataFrame:
     df["issue_date"] = pd.to_datetime(df["issue_date"]).dt.tz_localize("Europe/Warsaw")
     df["invoicing_date"] = pd.to_datetime(df["invoicing_date"], utc=True).dt.tz_convert("Europe/Warsaw")
     return df
+
+def get_last_sync(conn: sqlite3.Connection, direction: str) -> datetime | None:
+    row = conn.execute(
+        "SELECT last_synced FROM sync_state WHERE direction = ?", (direction,)
+    ).fetchone()
+    return datetime.fromisoformat(row[0]) if row else None
+
+def set_last_sync(conn: sqlite3.Connection, direction: str, when: datetime) -> None:
+    conn.execute(
+        """
+        INSERT INTO sync_state (direction, last_synced) VALUES (?, ?)
+        ON CONFLICT (direction) DO UPDATE SET last_synced = excluded.last_synced
+        """,
+        (direction, when.isoformat()),
+    )
+    conn.commit()
