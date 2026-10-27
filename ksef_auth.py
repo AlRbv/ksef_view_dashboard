@@ -111,11 +111,11 @@ class KsefClient:
         self._tokens = authenticate(self.base_url, self.nip, self.ksef_token)
         return self._tokens["accessToken"]["token"]
 
-    def query_metadata_page(self, subject_type: str, date_from: str, date_to: str, 
+    def query_metadata_page(self, subject_type: str, date_from: str, date_to: str, date_type: str = "PermanentStorage",
                             page_offset: int = 0, page_size: int = 10) -> dict:
         body = {
             "subjectType": subject_type,
-            "dateRange": {"dateType": "Issue", "from": date_from, "to": date_to},
+            "dateRange": {"dateType": date_type, "from": date_from, "to": date_to},
         }
 
         resp = requests.post(
