@@ -5,9 +5,11 @@ certifi==2026.10.23
 cffi==2.1.1
 charset-normalizer==3.5.2
 click==8.5.0
+colorama==0.4.6
 cryptography==50.0.2
 h11==0.16.0
 idna==3.20
+iniconfig==2.3.1
 itsdangerous==2.2.0
 Jinja2==3.1.6
 jsonschema==4.26.0
@@ -18,10 +20,13 @@ numpy==2.5.4
 packaging==26.3
 pandas==3.1.0
 pillow==13.0.0
+pluggy==1.7.0
 protobuf==7.36.2
 pyarrow==26.0.0
 pycparser==3.12
 pydeck==0.9.3
+Pygments==2.21.0
+pytest==9.1.1
 python-dateutil==3.0.0
 python-dotenv==1.2.4
 python-multipart==0.0.32
