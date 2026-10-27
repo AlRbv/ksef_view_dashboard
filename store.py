@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS sync_state (
 );
 """
 
-def connect() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
+def connect(db_path: str = DB_PATH) -> sqlite3.Connection:
+    conn = sqlite3.connect(db_path)
     conn.executescript(SCHEMA)
     return conn
 
