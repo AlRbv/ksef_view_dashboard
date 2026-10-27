@@ -10,10 +10,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
 load_dotenv()
-BASE_URL = os.environ["KSEF_BASE_URL"]  
 TIMEOUT = 10
-NIP = os.environ["KSEF_NIP"]
-KSEF_TOKEN = os.environ["KSEF_TOKEN"]
 
 def authenticate(base_url: str, nip: str, ksef_token: str, timeout: int = 10) -> dict:
 
@@ -96,22 +93,51 @@ def authenticate(base_url: str, nip: str, ksef_token: str, timeout: int = 10) ->
 
 # Add check for expired token to keep the session until token is about to expire
 
-_cache = {}   # holds the latest tokens between calls
+class KsefClient:
+    def __init__(self, base_url: str, nip: str, ksef_token: str):
+        self.base_url = base_url
+        self.nip = nip
+        self.ksef_token = ksef_token
+        self._tokens = None
 
-def _access() -> str:
-    tokens = _cache.get("tokens")
+    def _access(self) -> str:
+        if self._tokens is not None:                                  
+            valid_until = datetime.fromisoformat(
+                self._tokens["accessToken"]["validUntil"].replace("Z", "+00:00")
+            )
+            if valid_until - datetime.now(timezone.utc) > timedelta(seconds=60):
+                return self._tokens["accessToken"]["token"]
 
-    if tokens is not None:
-        valid_until = datetime.fromisoformat(
-            tokens["accessToken"]["validUntil"].replace("Z", "+00:00")
+        self._tokens = authenticate(self.base_url, self.nip, self.ksef_token)
+        return self._tokens["accessToken"]["token"]
+
+    def query_metadata_page(self, subject_type: str, date_from: str, date_to: str, 
+                            page_offset: int = 0, page_size: int = 10) -> dict:
+        body = {
+            "subjectType": subject_type,
+            "dateRange": {"dateType": "Issue", "from": date_from, "to": date_to},
+        }
+
+        resp = requests.post(
+            f"{self.base_url}/invoices/query/metadata",                
+            params={"pageOffset": page_offset, "pageSize": page_size},
+            headers={"Authorization": f"Bearer {self._access()}"},    
+            json=body,
+            timeout=TIMEOUT,
         )
-        if valid_until - datetime.now(timezone.utc) > timedelta(seconds=60):                                  
-            return tokens["accessToken"]["token"]  
+        print(resp.status_code)
+        resp.raise_for_status()
+        return resp.json()
 
-    _cache["tokens"] = authenticate(BASE_URL, NIP, KSEF_TOKEN)
-    return _cache["tokens"]["accessToken"]["token"]
 
 if __name__ == "__main__":
-    first = _access()
-    second = _access()
-    print("Same token reused:", first == second)
+    load_dotenv()
+    client = KsefClient(
+        os.environ["KSEF_BASE_URL"],
+        os.environ["KSEF_NIP"],
+        os.environ["KSEF_TOKEN"],
+    )
+    page = client.query_metadata_page("Subject1", "2026-10-01T00:00:00Z", "2026-10-27T23:59:59Z")
+    print(page.keys())
+    if page["invoices"]:
+        print(page["invoices"][0])
