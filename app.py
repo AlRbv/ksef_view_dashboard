@@ -68,3 +68,30 @@ for direction, label in [("sent", "Sent"), ("received", "Received")]:
     c1.metric("Invoices", len(part))
     c2.metric("Gross (PLN)", f"{pln['gross_amount'].sum():,.2f}")
     c3.metric("VAT (PLN)", f"{part['vat_amount'].sum():,.2f}")
+
+st.subheader("All invoices")
+query = st.text_input("Search: NIP, name or invoice number")
+
+table = in_period.copy()
+if query:
+    q = query.strip().lower()
+    search_cols = ["invoice_number", "seller_nip", "seller_name", "buyer_nip", "buyer_name"]
+    haystack = table[search_cols].fillna("").astype(str).agg(" ".join, axis=1).str.lower()
+    table = table[haystack.str.contains(q, regex=False)]
+
+table = table.sort_values("issue_date", ascending=False)
+
+st.dataframe(
+    table[["issue_date", "direction", "invoice_number",
+           "seller_name", "seller_nip", "buyer_name", "buyer_nip",
+           "net_amount", "vat_amount", "gross_amount", "currency",
+           "invoice_type", "ksef_number"]],
+    hide_index=True,
+    column_config={
+        "issue_date": st.column_config.DateColumn("Issue date", format="DD.MM.YYYY"),
+        "net_amount": st.column_config.NumberColumn("Net", format="%.2f"),
+        "vat_amount": st.column_config.NumberColumn("VAT", format="%.2f"),
+        "gross_amount": st.column_config.NumberColumn("Gross", format="%.2f"),
+    },
+)
+st.caption(f"{len(table)} invoices")
