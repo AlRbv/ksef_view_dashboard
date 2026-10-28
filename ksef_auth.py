@@ -118,14 +118,23 @@ class KsefClient:
             "dateRange": {"dateType": date_type, "from": date_from, "to": date_to},
         }
 
-        resp = requests.post(
-            f"{self.base_url}/invoices/query/metadata",                
-            params={"pageOffset": page_offset, "pageSize": page_size},
-            headers={"Authorization": f"Bearer {self._access()}"},    
-            json=body,
-            timeout=TIMEOUT,
-        )
-        print(resp.status_code)
+        for attempt in range(3):
+            resp = requests.post(
+                f"{self.base_url}/invoices/query/metadata",                
+                params={"pageOffset": page_offset, "pageSize": page_size},
+                headers={"Authorization": f"Bearer {self._access()}"},    
+                json=body,
+                timeout=TIMEOUT,
+            )
+            if resp.status_code != 429:
+                break
+            wait = int(resp.headers.get("Retry-After", "30"))
+            print(f"429: KSeF says wait {wait} s")
+            if wait > 120:
+                raise RuntimeError(f"KSeF rate limit: try again in {wait} s")
+            time.sleep(wait)
+            
+        print(resp.status_code, resp.text[:500])
         resp.raise_for_status()
         return resp.json()
 
