@@ -3,6 +3,9 @@ import streamlit as st
 from dotenv import load_dotenv
 from periods import period_range
 
+from datetime import datetime, time, timedelta
+from zoneinfo import ZoneInfo
+
 import store
 import sync
 from ksef_auth import KsefClient
@@ -12,6 +15,7 @@ URLS = {
     "Test": "https://api-test.ksef.mf.gov.pl/v2",
     "Production": "https://api.ksef.mf.gov.pl/v2",
 }
+WARSAW = ZoneInfo("Europe/Warsaw")
 
 st.set_page_config(page_title="KSeF Dashboard", layout="wide")
 
@@ -34,8 +38,25 @@ with st.sidebar:
 
 st.title("KSeF Dashboard")
 df = store.dataframe(conn)
-period = st.selectbox("Period", ["Last 7 days", "This month", "Last month", "All time"])
-start, end = period_range(period)
+period = st.selectbox("Period", ["Last 7 days", "This month", "Last month", "All time","Custom range"])
+now = datetime.now(WARSAW)
+if period == "Custom range":
+    today = now.date()
+    picked = st.date_input(
+        "From - to",
+        value=(today - timedelta(days=30), today),
+        max_value= today,
+        format = "DD.MM.YYYY"
+    )
+    if len(picked) < 2:
+        st.info("Pick an end date")
+        st.stop()
+    d_from, d_to = picked
+    start = datetime.combine(d_from, time.min, tzinfo=WARSAW)
+    end = datetime.combine(d_to + timedelta(days=1), time.min, tzinfo=WARSAW)
+else:
+    start, end = period_range(period, now)
+
 in_period = df[(df["issue_date"] >= start) & (df["issue_date"] < end)]
 
 for direction, label in [("sent", "Sent"), ("received", "Received")]:
