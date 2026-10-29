@@ -25,14 +25,18 @@ with st.sidebar:
     source = st.radio("Data", ["KSeF", "Demo"])
     env = st.selectbox("Environment", list(URLS))
     nip = st.text_input("NIP", value=os.getenv("KSEF_NIP", ""))
-    token = st.text_input("KSeF token", value=os.getenv("KSEF_TOKEN", ""), type="password")
+    token = st.text_input(
+    "KSeF token",
+    type="password",
+    placeholder="Using KSEF_TOKEN from .env" if os.getenv("KSEF_TOKEN") else "",
+    )
 
     db_path = "data/demo.db" if source == "Demo" else f"data/ksef_{env.lower()}.db"
     conn = store.connect(db_path)
 
     if st.button("Sync now", disabled=(source == "Demo")):
         with st.spinner("Syncing with KSeF..."):
-            client = KsefClient(URLS[env], nip, token)
+            client = KsefClient(URLS[env], nip, token or os.getenv("KSEF_TOKEN", ""))
             result = sync.sync(client, conn)
         st.success(f"{result['received']} received, {result['sent']} sent")
     last = store.get_last_sync(conn, "sent")
@@ -71,7 +75,7 @@ for direction, label in [("sent", "Sent"), ("received", "Received")]:
     c2.metric("Gross (PLN)", f"{pln['gross_amount'].sum():,.2f}")
     c3.metric("VAT (PLN)", f"{part['vat_amount'].sum():,.2f}")
 
-st.subheader("Gross PLN per period: sent vs received")
+st.subheader("Details and Analytics")
 
 span = end - start
 if span <= timedelta(days=31):
