@@ -134,7 +134,6 @@ class KsefClient:
                 raise RuntimeError(f"KSeF rate limit: try again in {wait} s")
             time.sleep(wait)
             
-        print(resp.status_code, resp.text[:500])
         resp.raise_for_status()
         return resp.json()
 

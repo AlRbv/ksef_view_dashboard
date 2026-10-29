@@ -1,5 +1,6 @@
 import sqlite3
 import pandas as pd
+import os
 
 from datetime import datetime
 
@@ -31,6 +32,7 @@ CREATE TABLE IF NOT EXISTS sync_state (
 """
 
 def connect(db_path: str = DB_PATH) -> sqlite3.Connection:
+    os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
     conn = sqlite3.connect(db_path)
     conn.executescript(SCHEMA)
     return conn
