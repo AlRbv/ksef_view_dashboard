@@ -41,7 +41,7 @@ with st.sidebar:
             client = KsefClient(URLS[env], nip, token or os.getenv("KSEF_TOKEN", ""))
             try:
                 result = sync.sync(client, conn)
-            except (requests.RequestsException, RuntimeError) as e:
+            except (requests.RequestException, RuntimeError) as e:
                 st.error(f"Sync failed: {e}")
             else:
                 st.success(f"{result['received']} received. {result['sent']} sent")
