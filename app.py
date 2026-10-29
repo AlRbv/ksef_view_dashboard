@@ -45,8 +45,6 @@ with st.sidebar:
                 st.error(f"Sync failed: {e}")
             else:
                 st.success(f"{result['received']} received. {result['sent']} sent")
-            result = sync.sync(client, conn)
-        st.success(f"{result['received']} received, {result['sent']} sent")
     last = store.get_last_sync(conn, "sent")
     st.caption(f"Last sync: {last:%Y-%m-%d %H:%M} UTC" if last else "Never synced")
 
