@@ -8,6 +8,8 @@ from zoneinfo import ZoneInfo
 import altair as alt
 import pandas as pd
 
+import requests
+
 import store
 import sync
 from ksef_auth import KsefClient
@@ -37,6 +39,12 @@ with st.sidebar:
     if st.button("Sync now", disabled=(source == "Demo")):
         with st.spinner("Syncing with KSeF..."):
             client = KsefClient(URLS[env], nip, token or os.getenv("KSEF_TOKEN", ""))
+            try:
+                result = sync.sync(client, conn)
+            except (requests.RequestsException, RuntimeError) as e:
+                st.error(f"Sync failed: {e}")
+            else:
+                st.success(f"{result['received']} received. {result['sent']} sent")
             result = sync.sync(client, conn)
         st.success(f"{result['received']} received, {result['sent']} sent")
     last = store.get_last_sync(conn, "sent")
@@ -114,7 +122,7 @@ chart = (
     .properties(height=320)
 )
 with tab_trend:
-    st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(chart, width = "stretch")
     st.caption(f"One bar pair per {unit}. Hover a bar for the exact amount.")
 
 with tab_top:
@@ -136,7 +144,7 @@ with tab_top:
         col.dataframe(
             top[top["direction"] == direction].head(10)[["name", "nip", "invoices", "gross"]],   
             hide_index=True,
-            use_container_width=True,
+            width = "stretch",
             column_config={
                 "name": "Name",
                 "nip": "NIP",
