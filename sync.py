@@ -40,7 +40,7 @@ def sync_direction(client: KsefClient, conn, subject_type: str, direction: str) 
     for window_start, window_end in date_windows(start, now):
         invoices = fetch_all(client, subject_type, window_start.isoformat(), window_end.isoformat())
         store.upsert(conn, invoices, direction)
-        store.set_last_sync(conn, direction, now)  
+        store.set_last_sync(conn, direction, window_end)  
         total += len(invoices)
     return total
 

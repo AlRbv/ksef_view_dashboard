@@ -8,13 +8,13 @@ See what you sent and received in any period: invoice counts, gross and VAT tota
 ![Dashboard in Demo mode](docs/demo.png)
 
 - **Runs on your computer only.** Invoices are cached in a local SQLite file; nothing is sent anywhere except the official KSeF API.
-- **Read-only.** Configured to use KSeF read only token (przeglądanie faktur). You can create such token inside KSeF.
+- **Read-only.** The app only calls KSeF read endpoints. Give it a token with only the **przeglądanie faktur** permission.
 - **Test-mode** Can also be used with KSeF test environment. 
 - **Try it without a token.** Demo mode ships 500 fake invoices to play around with.
 
 ## Quick start (1 minute)
 
-Requires **Python 3.11+**.
+Requires **Python 3.13+**.
 
 ```bash
 git clone https://github.com/AlRbv/ksef_view_dashboard.git
@@ -76,13 +76,13 @@ Lokalny dashboard tylko do odczytu dla Twoich faktur w **KSeF 2.0** (Krajowy Sys
 Sprawdź faktury wystawione i otrzymane w dowolnym okresie: liczbę faktur, sumy brutto i VAT, trendy oraz największych kontrahentów.
 
 - **Działa tylko na Twoim komputerze.** Faktury są zapisywane w lokalnym pliku SQLite; żadne dane nie są wysyłane poza oficjalne API KSeF.
-- **Tylko do odczytu.** Aplikacja korzysta z tokena KSeF tylko do odczytu (przeglądanie faktur). Taki token wygenerujesz w KSeF.
+- **Tylko do odczytu.** Aplikacja wywołuje wyłącznie endpointy odczytu KSeF. Użyj tokena z samym uprawnieniem **przeglądanie faktur**.
 - **Tryb testowy.** Działa także ze środowiskiem testowym KSeF.
 - **Wypróbuj bez tokena.** Tryb Demo zawiera 500 fikcyjnych faktur do swobodnego testowania.
 
 ### Szybki start (1 minuta)
 
-Wymaga **Pythona 3.11+**.
+Wymaga **Pythona 3.13+**.
 
 ```bash
 git clone https://github.com/AlRbv/ksef_view_dashboard.git
